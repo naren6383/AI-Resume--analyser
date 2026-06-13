@@ -1,0 +1,264 @@
+/* Design Tokens & Theme Variables */
+:root {
+    --brand-font: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --body-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
+    /* Premium Theme Overrides */
+    --accent-blue: #0d6efd;
+    --accent-blue-hover: #0b5ed7;
+    --accent-blue-light: rgba(13, 110, 253, 0.08);
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 20px;
+    --transition-speed: 0.3s;
+}
+
+/* Base Styles */
+body {
+    font-family: var(--body-font);
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: var(--brand-font);
+    font-weight: 600;
+}
+
+.tracking-tight {
+    letter-spacing: -0.03em;
+}
+
+/* Navbar Tuning */
+.navbar {
+    background-color: var(--bs-body-bg);
+    backdrop-filter: blur(8px);
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+.nav-link {
+    transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+/* Modern Card Customizations */
+.card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--border-radius-md);
+    background-color: var(--bs-card-bg, var(--bs-body-bg));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transition: transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1),
+                border-color var(--transition-speed) ease,
+                background-color var(--transition-speed) ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
+    border-color: rgba(13, 110, 253, 0.3);
+}
+
+/* Drag and Drop File Upload Area */
+.upload-drop-zone {
+    border: 2px dashed var(--bs-border-color);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--bs-tertiary-bg);
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--transition-speed) ease,
+                background-color var(--transition-speed) ease;
+}
+
+.upload-drop-zone:hover, .upload-drop-zone.dragover {
+    border-color: var(--accent-blue);
+    background-color: var(--accent-blue-light);
+}
+
+.upload-icon {
+    font-size: 3.5rem;
+    color: var(--bs-secondary-color);
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.upload-drop-zone:hover .upload-icon {
+    transform: translateY(-5px);
+    color: var(--accent-blue);
+}
+
+/* Hide raw file input */
+#resumeInput {
+    display: none;
+}
+
+/* Custom Badges */
+.skill-badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    display: inline-flex;
+    align-items: center;
+    margin: 0.25rem;
+    border: 1px solid var(--bs-border-color-translucent);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.skill-badge:hover {
+    background-color: var(--accent-blue-light);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.skill-badge-matched {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+    border: 1px solid rgba(25, 135, 84, 0.25);
+}
+
+.skill-badge-missing {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.25);
+}
+
+/* ATS Gauge & Charts */
+.ats-score-container {
+    position: relative;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+.ats-score-overlay {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.ats-score-value {
+    font-family: var(--brand-font);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent-blue);
+    line-height: 1;
+}
+
+.ats-score-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--bs-secondary-color);
+    margin-top: 2px;
+}
+
+/* Micro-animations */
+.btn {
+    border-radius: var(--border-radius-sm);
+    font-family: var(--brand-font);
+    font-weight: 500;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-primary {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-blue-hover);
+    border-color: var(--accent-blue-hover);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+}
+
+/* Analysis details list */
+.analysis-list-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.analysis-list-item:last-child {
+    border-bottom: none;
+}
+
+/* Settings styling */
+.settings-section-title {
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+    color: var(--accent-blue);
+}
+
+/* File History Styles */
+.table {
+    border-color: var(--bs-border-color-translucent);
+}
+
+.table > :not(caption) > * > * {
+    background-color: transparent;
+    padding: 1rem 0.75rem;
+}
+
+/* Mode toggler layout */
+#themeToggleBtn:hover {
+    background-color: var(--bs-secondary-bg);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85);
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+[data-bs-theme="dark"] .loading-overlay {
+    background-color: rgba(33, 37, 41, 0.9);
+}
+
+.pulse-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--accent-blue-light);
+    border-top-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Text area sizing */
+.min-vh-75 {
+    min-height: 75vh;
+}
+.text-xs {
+    font-size: 0.75rem;
+}
+.text-sm {
+    font-size: 0.875rem;
+}

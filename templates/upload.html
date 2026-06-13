@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Loading Screen Overlay during processing -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="pulse-spinner mb-4"></div>
+    <h3 class="fw-bold mb-2 text-center text-primary-gradient">Analyzing Resume</h3>
+    <p id="processingStep" class="text-muted text-sm text-center mb-0">Initializing parser...</p>
+</div>
+
+<div class="row justify-content-center py-4">
+    <div class="col-lg-8 col-md-10">
+        <div class="text-center mb-4">
+            <h1 class="h2 fw-bold mb-2">Upload Your Resume</h1>
+            <p class="text-muted">Upload your resume in PDF or Word format and optionally compare it to a target Job Description.</p>
+        </div>
+        
+        <form id="uploadForm" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+            
+            <!-- File Drag and Drop Card -->
+            <div class="card border-light shadow-sm p-4 mb-4">
+                <div id="uploadDropZone" class="upload-drop-zone">
+                    <input type="file" id="resumeInput" name="resume" accept=".pdf,.docx">
+                    <div class="upload-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3 class="fs-5 fw-bold mb-1">Drag and drop your file here</h3>
+                    <p class="text-muted text-xs mb-3">Accepts PDF or Word (.docx) files up to 5MB</p>
+                    <button type="button" id="fileSelectBtn" class="btn btn-outline-primary btn-sm px-4">
+                        Browse Files
+                    </button>
+                </div>
+                
+                <!-- Display selected filename dynamically -->
+                <div id="fileInfo" class="mt-3 p-3 border rounded-3 bg-light-subtle d-none d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center overflow-hidden">
+                        <i class="fa-solid fa-file-invoice text-primary fs-4 me-3"></i>
+                        <div class="text-truncate">
+                            <div class="fw-semibold text-sm text-truncate" id="selectedFileName">resume.pdf</div>
+                            <div class="text-xs text-muted">Ready to analyze</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="document.getElementById('resumeInput').value=''; document.getElementById('fileInfo').classList.add('d-none');">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Job Description Options Card -->
+            <div class="card border-light shadow-sm p-4 mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-briefcase text-primary fs-5 me-2"></i>
+                    <h2 class="h5 mb-0 fw-bold">Job Description Mapping (Optional)</h2>
+                </div>
+                
+                <p class="text-muted text-sm mb-4">
+                    Providing a job description allows the analyzer to run keyword correlation audits, detect technical skill gaps, and compute a matching matrix.
+                </p>
+                
+                <div class="mb-3">
+                    <label for="jobTitleInput" class="form-label fw-semibold text-sm">Target Job Title</label>
+                    <input type="text" class="form-control" id="jobTitleInput" name="job_title" placeholder="e.g. Senior Python Flask Developer">
+                </div>
+                
+                <div class="mb-0">
+                    <label for="jobDescriptionInput" class="form-label fw-semibold text-sm">Job Description Requirements</label>
+                    <textarea class="form-control" id="jobDescriptionInput" name="job_description" rows="6" placeholder="Paste the job description text here..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5 py-3 fs-6 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate ATS Analysis
+                </button>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}

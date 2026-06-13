@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-11">
+        
+        <!-- Header Info Card -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center border-bottom pb-3 mb-4 gap-3">
+            <div>
+                <h1 class="h3 mb-1 fw-bold d-flex align-items-center">
+                    <i class="fa-solid fa-square-poll-vertical text-primary me-2"></i>Analysis Dashboard
+                </h1>
+                <div class="text-muted text-xs">
+                    File: <span class="fw-semibold">{{ resume.filename }}</span> | Analyzed: {{ analysis.created_at.strftime('%Y-%m-%d %I:%M %p') }}
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button id="copyAnalysisBtn" class="btn btn-outline-primary py-2 px-3 text-sm">
+                    <i class="fa-solid fa-copy me-2"></i>Copy Summary
+                </button>
+                <a href="{{ url_for('download_report', analysis_id=analysis.id) }}" class="btn btn-primary py-2 px-3 text-sm shadow-sm">
+                    <i class="fa-solid fa-file-pdf me-2"></i>Export PDF Report
+                </a>
+            </div>
+        </div>
+        
+        <!-- Quick Stats Cards Row -->
+        <div class="row g-4 mb-4">
+            
+            <!-- Left Side: ATS Score Doughnut Gauge -->
+            <div class="col-lg-4 col-md-12">
+                <div class="card border-light shadow-sm p-4 text-center h-100 d-flex flex-column align-items-center justify-content-center">
+                    <h3 class="fs-6 fw-bold text-muted text-uppercase tracking-wider mb-3">ATS Compatibility</h3>
+                    
+                    <div class="ats-score-container mb-2">
+                        <canvas id="atsGaugeChart" width="220" height="220"></canvas>
+                        <div class="ats-score-overlay">
+                            <div class="ats-score-value" id="atsScoreValue">{{ analysis.ats_score }}</div>
+                            <div class="ats-score-label">Score</div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-muted mb-0 px-2 mt-2">
+                        {% if analysis.ats_score >= 80 %}
+                            <span class="text-success fw-bold"><i class="fa-solid fa-face-smile me-1"></i> Excellent Score!</span> Your CV is highly optimized and structured for applicant tracking databases.
+                        {% elif analysis.ats_score >= 60 %}
+                            <span class="text-warning fw-bold"><i class="fa-solid fa-face-meh me-1"></i> Good Potential.</span> Your CV passes base filters, but minor structure updates will maximize response rates.
+                        {% else %}
+                            <span class="text-danger fw-bold"><i class="fa-solid fa-face-frown me-1"></i> Optimization Required.</span> The parser struggled with crucial sections. Follow the recommendations.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Center: Job Match and Details -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-light shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h3 class="fs-6 fw-bold text-muted text-uppercase tracking-wider mb-3">Job Match Summary</h3>
+                        
+                        {% if resume.job_title %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="p-3 bg-primary-subtle text-primary rounded-3 me-3">
+                                    <i class="fa-solid fa-briefcase fs-4"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="text-xs text-muted">Target Role</div>
+                                    <div class="fw-bold text-sm text-truncate" title="{{ resume.job_title }}">{{ resume.job_title }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between text-sm mb-1 fw-semibold">
+                                    <span>JD Keyword Correlation</span>
+                                    <span class="text-primary">{{ analysis.job_match_percentage }}%</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-primary rounded" role="progressbar" style="width: {{ analysis.job_match_percentage }}%;" aria-valuenow="{{ analysis.job_match_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="fa-solid fa-globe fs-2 mb-2"></i>
+                                <div class="text-sm">Standalone Audit</div>
+                                <div class="text-xs">No Job Description mapped to this analysis run.</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="border-top pt-3 mt-3">
+                        <div class="row text-center g-2">
+                            <div class="col-6 border-end">
+                                <div class="fs-4 fw-bold text-primary">{{ skills|length }}</div>
+                                <div class="text-xs text-muted">Core Skills</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="fs-4 fw-bold text-warning">{{ keywords.matched|length + keywords.missing|length }}</div>
+                                <div class="text-xs text-muted">Key Terms</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side: Section Scores Breakdown -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-light shadow-sm p-4 h-100">
+                    <h3 class="fs-6 fw-bold text-muted text-uppercase tracking-wider mb-2">Scoring Components</h3>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="sectionScoresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Summary & Insights -->
+        <div class="row g-4 mb-4">
+            <!-- Executive Summary & Strengths -->
+            <div class="col-lg-7 col-md-12">
+                <div class="card border-light shadow-sm p-4 h-100">
+                    <h2 class="h5 fw-bold text-primary mb-3">
+                        <i class="fa-solid fa-file-invoice me-2"></i>Executive Summary
+                    </h2>
+                    <p id="resumeSummaryContent" class="text-sm leading-relaxed mb-4">
+                        {{ analysis.summary }}
+                    </p>
+                    
+                    <h3 class="fs-6 fw-bold text-success mb-3 border-top pt-3">
+                        <i class="fa-solid fa-circle-check me-2"></i>Key Strengths
+                    </h3>
+                    <ul class="list-unstyled mb-0">
+                        {% if strengths %}
+                            {% for strength in strengths %}
+                                <li class="text-sm text-secondary d-flex align-items-start mb-2">
+                                    <i class="fa-solid fa-check text-success me-2 mt-1"></i>
+                                    <div>{{ strength }}</div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-sm text-muted">No specific strengths documented.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Weaknesses & Suggestions -->
+            <div class="col-lg-5 col-md-12">
+                <div class="card border-light shadow-sm p-4 h-100">
+                    <h2 class="h5 fw-bold text-danger mb-3">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Areas of Improvement
+                    </h2>
+                    <ul class="list-unstyled mb-4">
+                        {% if weaknesses %}
+                            {% for weakness in weaknesses %}
+                                <li class="text-sm text-secondary d-flex align-items-start mb-2">
+                                    <i class="fa-solid fa-xmark text-danger me-2 mt-1"></i>
+                                    <div>{{ weakness }}</div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-sm text-muted">No major weaknesses identified.</li>
+                        {% endif %}
+                    </ul>
+                    
+                    <h3 class="fs-6 fw-bold text-primary mb-3 border-top pt-3">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Action Recommendations
+                    </h3>
+                    <ul id="resumeSuggestionsContent" class="list-unstyled mb-0">
+                        {% if suggestions %}
+                            {% for suggestion in suggestions %}
+                                <li class="text-sm text-secondary d-flex align-items-start mb-2">
+                                    <i class="fa-solid fa-circle-arrow-right text-primary me-2 mt-1"></i>
+                                    <div>{{ suggestion }}</div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-sm text-muted">CV is fully optimized.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical Skill & Keyword Mapping -->
+        <div class="row g-4 mb-4">
+            
+            <!-- Technical Skills Badges -->
+            <div class="col-md-6 col-sm-12">
+                <div class="card border-light shadow-sm p-4 h-100">
+                    <h2 class="h5 fw-bold mb-3 d-flex align-items-center justify-content-between">
+                        <span><i class="fa-solid fa-tags text-primary me-2"></i>Technical & Core Skills</span>
+                        <span class="badge bg-secondary-subtle text-secondary text-xs rounded-pill">{{ skills|length }} detected</span>
+                    </h2>
+                    
+                    <p class="text-muted text-xs mb-3">
+                        Pills matching target requirements are color-coded. Click or hover on badges to review patterns.
+                    </p>
+                    
+                    <div class="d-flex flex-wrap mt-2">
+                        {% if skills %}
+                            {% for skill in skills %}
+                                <span class="skill-badge {% if resume.job_description %}{% if skill in missing_skills %}skill-badge-missing{% else %}skill-badge-matched{% endif %}{% endif %}">
+                                    {% if resume.job_description %}
+                                        <i class="fa-solid {% if skill in missing_skills %}fa-circle-xmark me-1{% else %}fa-circle-check me-1{% endif %}"></i>
+                                    {% endif %}
+                                    {{ skill }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-muted text-xs py-3 text-center w-100">No skills parsed from content.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Missing Skills & Keyword Analysis -->
+            <div class="col-md-6 col-sm-12">
+                <div class="card border-light shadow-sm p-4 h-100">
+                    <h2 class="h5 fw-bold mb-3">
+                        <i class="fa-solid fa-magnifying-glass-chart text-warning me-2"></i>Job Gap & Keyword Audits
+                    </h2>
+                    
+                    {% if resume.job_description %}
+                        <div class="mb-4">
+                            <h3 class="fs-6 fw-bold text-danger mb-2"><i class="fa-solid fa-circle-minus me-1"></i>Skills Gaps Detected</h3>
+                            <div class="d-flex flex-wrap">
+                                {% if missing_skills %}
+                                    {% for skill in missing_skills %}
+                                        <span class="skill-badge skill-badge-missing">
+                                            <i class="fa-solid fa-circle-exclamation me-1"></i>{{ skill }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-success text-xs fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Perfect Match! No missing job description skills detected.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="fs-6 fw-bold text-muted mb-2"><i class="fa-solid fa-arrow-down-wide-short me-1"></i>Keyword Correlation Density</h3>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="text-xs fw-bold text-success mb-1">Matched Keywords</div>
+                                    <ul class="list-unstyled text-xs text-secondary mb-0">
+                                        {% for kw in keywords.matched %}
+                                            <li class="mb-1"><i class="fa-solid fa-square-check text-success me-1"></i>{{ kw }}</li>
+                                        {% empty %}
+                                            <li class="text-muted">None</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-xs fw-bold text-danger mb-1">Missing Keywords</div>
+                                    <ul class="list-unstyled text-xs text-secondary mb-0">
+                                        {% for kw in keywords.missing %}
+                                            <li class="mb-1"><i class="fa-solid fa-square-xmark text-danger me-1"></i>{{ kw }}</li>
+                                        {% empty %}
+                                            <li class="text-muted">None</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-circle-question fs-2 mb-2"></i>
+                            <div class="text-sm">Job Mappings Empty</div>
+                            <p class="text-xs px-4">Upload your resume with a target Job Description to display missing skills gaps and keyword counts.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Original Extracted Text Viewer -->
+        <div class="accordion border rounded-3 overflow-hidden shadow-sm" id="extractedTextAccordion">
+            <div class="accordion-item border-0">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold text-sm bg-light-subtle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseText" aria-expanded="false" aria-controls="collapseText">
+                        <i class="fa-solid fa-file-lines me-2"></i>View Extracted Resume Text (Raw)
+                    </button>
+                </h2>
+                <div id="collapseText" class="accordion-collapse collapse" data-bs-parent="#extractedTextAccordion">
+                    <div class="accordion-body bg-body-tertiary">
+                        <pre class="mb-0 text-xs text-secondary p-3 border rounded bg-body" style="white-space: pre-wrap; font-family: monospace; max-height: 400px; overflow-y: auto;">{{ resume.extracted_text }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // -------------------------------------------------------------
+    // Chart 1: ATS Doughnut Gauge Chart
+    // -------------------------------------------------------------
+    const atsScore = parseInt("{{ analysis.ats_score }}");
+    const ctxGauge = document.getElementById('atsGaugeChart').getContext('2d');
+    
+    // Determine color based on score
+    let scoreColor = '#dc3545'; // Red
+    if (atsScore >= 80) {
+        scoreColor = '#198754'; // Green
+    } else if (atsScore >= 60) {
+        scoreColor = '#ffc107'; // Yellow
+    }
+    
+    new Chart(ctxGauge, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [atsScore, 100 - atsScore],
+                backgroundColor: [scoreColor, 'rgba(0, 0, 0, 0.05)'],
+                borderWidth: 0,
+                circumference: 270,
+                rotation: 225
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '80%',
+            plugins: {
+                tooltip: { enabled: false },
+                legend: { display: false }
+            }
+        }
+    });
+
+    // -------------------------------------------------------------
+    // Chart 2: Section Breakdown Horizontal Bar Chart
+    // -------------------------------------------------------------
+    const ctxSection = document.getElementById('sectionScoresChart').getContext('2d');
+    const scoreBreakdown = {{ score_breakdown | tojson }};
+    
+    // Key labels mapping
+    const labels = [
+        'Contact Info',
+        'Education',
+        'Experience',
+        'Skills',
+        'Projects/Certs',
+        'Formatting'
+    ];
+    
+    const values = [
+        scoreBreakdown.contact_info || 0,
+        scoreBreakdown.education || 0,
+        scoreBreakdown.experience || 0,
+        scoreBreakdown.skills || 0,
+        scoreBreakdown.projects_certifications || 0,
+        scoreBreakdown.formatting || 0
+    ];
+    
+    // Define max scores for each section to show relative bar filled
+    const maxValues = [10, 15, 20, 25, 15, 15];
+    
+    // Normalize values to percentage for consistent bar comparison
+    const percentValues = values.map((val, idx) => Math.round((val / maxValues[idx]) * 100));
+
+    new Chart(ctxSection, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: percentValues,
+                backgroundColor: 'rgba(13, 110, 253, 0.85)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const idx = context.dataIndex;
+                            return ` Score: ${values[idx]}/${maxValues[idx]} (${percentValues[idx]}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    min: 0,
+                    max: 100,
+                    grid: { display: false },
+                    ticks: {
+                        callback: function(value) { return value + "%"; }
+                    }
+                },
+                y: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

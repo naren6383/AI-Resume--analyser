@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center justify-content-between py-5 my-3">
+    <!-- Hero Banner Text -->
+    <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-3 fw-semibold">
+            <i class="fa-solid fa-bolt me-2"></i>Optimized for ATS Scanners
+        </div>
+        <h1 class="display-4 fw-extrabold tracking-tight mb-3 lh-sm text-gradient">
+            Analyze & Optimize Your Resume with AI
+        </h1>
+        <p class="lead text-muted mb-4 fs-5">
+            CVSpark extracts data from your PDF or Word resume, evaluates ATS compatibility, identifies critical skill gaps, and suggests tailored visual recommendations to land your dream interview.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+            <a href="{{ url_for('upload') }}" class="btn btn-primary btn-lg px-4 py-3 fs-6 d-flex align-items-center">
+                <i class="fa-solid fa-cloud-arrow-up me-2 fs-5"></i>Start Scanning Free
+            </a>
+            <a href="{{ url_for('history') }}" class="btn btn-outline-secondary btn-lg px-4 py-3 fs-6 d-flex align-items-center">
+                <i class="fa-solid fa-list me-2 fs-5"></i>View History
+            </a>
+        </div>
+    </div>
+    
+    <!-- Hero Banner Card Details -->
+    <div class="col-lg-5 col-xl-5">
+        <div class="card card-hover border-light shadow-sm p-4 text-center">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="p-3 border rounded-3 bg-light-subtle">
+                        <div class="fs-2 fw-bold text-primary mb-1">{{ total_resumes }}</div>
+                        <div class="text-muted text-xs text-uppercase fw-semibold">Scans Analyzed</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 border rounded-3 bg-light-subtle">
+                        <div class="fs-2 fw-bold text-success mb-1">{{ avg_score }}/100</div>
+                        <div class="text-muted text-xs text-uppercase fw-semibold">Average ATS Score</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-3 border border-dashed rounded-3 text-start">
+                <h5 class="fs-6 fw-bold mb-2">Supported Features:</h5>
+                <ul class="list-unstyled mb-0 text-sm text-secondary">
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> PDF & DOCX File Extraction</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Detailed ATS Scoring Breakdown</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Domain Skill Gap Mapping</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Professional PDF Report Download</li>
+                    <li><i class="fa-solid fa-check text-success me-2"></i> Multi-API (Gemini, Groq, OpenRouter)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Scans Section -->
+<div class="row justify-content-center py-4">
+    <div class="col-md-12">
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-2">
+            <h2 class="h4 mb-0 fw-bold d-flex align-items-center">
+                <i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Recent Analyses
+            </h2>
+            {% if recent_analyses %}
+                <a href="{{ url_for('history') }}" class="btn btn-sm btn-link text-decoration-none">View All History <i class="fa-solid fa-arrow-right"></i></a>
+            {% endif %}
+        </div>
+        
+        {% if recent_analyses %}
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                {% for analysis in recent_analyses %}
+                    <div class="col">
+                        <div class="card card-hover h-100 border-light p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="pe-2 overflow-hidden">
+                                    <h3 class="fs-6 fw-bold text-truncate mb-1" title="{{ analysis.resume.filename }}">
+                                        {{ analysis.resume.filename }}
+                                    </h3>
+                                    <div class="text-xs text-muted">
+                                        Uploaded: {{ analysis.resume.upload_date.strftime('%Y-%m-%d %I:%M %p') }}
+                                    </div>
+                                </div>
+                                <span class="badge {% if analysis.ats_score >= 80 %}bg-success{% elif analysis.ats_score >= 60 %}bg-warning{% else %}bg-danger{% endif %} py-2 px-3 fs-6">
+                                    ATS: {{ analysis.ats_score }}
+                                </span>
+                            </div>
+                            
+                            <div class="text-sm text-secondary mb-3 mt-1 text-truncate">
+                                {% if analysis.resume.job_title %}
+                                    <i class="fa-solid fa-briefcase text-muted me-1"></i> Target: {{ analysis.resume.job_title }}
+                                {% else %}
+                                    <i class="fa-solid fa-file-invoice text-muted me-1"></i> General Scan
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-2">
+                                <span class="text-xs text-muted">
+                                    {% if analysis.resume.job_description %}
+                                        <i class="fa-solid fa-link me-1"></i> Job Match: {{ analysis.job_match_percentage }}%
+                                    {% else %}
+                                        <i class="fa-solid fa-globe me-1"></i> Standalone Scan
+                                    {% endif %}
+                                </span>
+                                <a href="{{ url_for('dashboard', analysis_id=analysis.id) }}" class="btn btn-sm btn-outline-primary py-1 px-3">
+                                    View Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 border border-dashed rounded-3">
+                <i class="fa-solid fa-folder-open text-muted fs-1 mb-3"></i>
+                <p class="text-muted mb-3">No resumes have been analyzed yet.</p>
+                <a href="{{ url_for('upload') }}" class="btn btn-primary btn-sm px-4">
+                    Upload Your First Resume
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
